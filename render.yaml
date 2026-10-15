@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: wow-quick-bites-api
+    runtime: python
+    # Free plan: no pre-deploy step and no shell, so migrations, the first catalogue and the owner
+    # account are handled at build time. Every command below is safe to run on each deploy.
+    buildCommand: >-
+      pip install -r requirements.txt &&
+      python manage.py collectstatic --no-input &&
+      python manage.py migrate --no-input &&
+      python manage.py seed --if-empty &&
+      python manage.py ensure_superadmin
+    startCommand: gunicorn WOWBites.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 60
+    healthCheckPath: /health/
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13.5"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: DATABASE_URL
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: FRONTEND_URL
+        value: "https://wow-quick-bites-ui.vercel.app"
+      - key: FRONTEND_SHARED_SECRET
+        generateValue: true
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: CLOUDINARY_URL
+        sync: false
+      - key: DEEPL_AUTH_KEY
+        sync: false
+      - key: SUPERADMIN_EMAIL
+        sync: false
+      - key: SUPERADMIN_PASSWORD
+        sync: false
+      - key: SUPERADMIN_NAME
+        sync: false
